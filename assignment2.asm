@@ -1,37 +1,45 @@
-%macro rw 3
-	mov rax,%1
-	mov rdi,01
-	mov rsi,%2
-	mov rdx,%3
-	syscall
-%endmacro rw
-
+;Write an X86/64 bit ALP to accept string and display its length
 section .data
-msg1 db "Enter string="
-msg2 db "Length="
-
 section .bss
-len resb 1
-stri resb 15
-
+            str1 resb 200
+            result resb 200
 section .text
-global _start
-_start:
-
-rw 01,msg1,13
-rw 00,stri,15
-
-
-cmp al,09h
-jle next
-add al,07h
-next: add al,30h
-mov byte[len],al
-
-rw 01,msg2,7
-rw 01,len,01
+    global _start
+    _start:
+            mov rax, 0
+            mov rdi, 0
+            mov rsi, str1
+            mov rdx, 200
+            syscall
+           
+           mov rbx,rax	                 ;store number in rbx ----------------------
+	  mov  rdi, result		;point rdi to result variable
+	  mov cx,16		;load count of rotation in cl
+up1:
+	  rol rbx,04		;rotate number left by four bits
+	  mov al,bl		;move lower byte in dl
+	  and al,0fh		; get only LSB
+	  cmp al,09h		;compare with 39h
+	  jg add_37		;if grater than 39h skip add 37
+	  add al,30h
+	  jmp  skip		;else add 30
+add_37 : add al,37h
+ skip:   mov [rdi],al		;store ascii code in result variable
+	     inc rdi			;point to next byte
+	     dec cx			;decrement the count of digits to display
+	     jnz up1			;if not zero jump to repeat
+	
+	     mov rax,1
+	     mov rdi,1
+	     mov rsi,result
+	     mov rdx,16
+    	     syscall
+	
 
 mov rax,60
-mov rdi,0
-syscall
-
+	mov rdi,0
+	syscall
+	
+;output
+; Hello
+;0000000000000005
